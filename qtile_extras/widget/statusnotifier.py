@@ -116,19 +116,21 @@ class StatusNotifier(QtileStatusNotifier, DbusMenuMixin):
             return
         self.selected_item.get_menu(callback=self.display_menu)
 
-    def _draw_icon(self, icon, x, y):
+    def _draw_icon(self, icon, x, y, scale):
         ctx = self.drawer.ctx
         ctx.save()
 
+        ctx.scale(scale, scale)
+
         if self.mask:
-            ctx.translate(x, y)
+            ctx.translate(x/scale, y/scale)
             self.drawer.set_source_rgb(self.foreground)
             ctx.set_operator(cairocffi.OPERATOR_SOURCE)
             ctx.mask(cairocffi.SurfacePattern(icon))
             ctx.fill()
 
         else:
-            ctx.set_source_surface(icon, x, y)
+            ctx.set_source_surface(icon, x/scale, y/scale)
             ctx.paint()
 
         ctx.restore()

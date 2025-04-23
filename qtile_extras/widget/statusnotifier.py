@@ -123,14 +123,14 @@ class StatusNotifier(QtileStatusNotifier, DbusMenuMixin):
         ctx.scale(scale, scale)
 
         if self.mask:
-            ctx.translate(x/scale, y/scale)
+            ctx.translate(x / scale, y / scale)
             self.drawer.set_source_rgb(self.foreground)
             ctx.set_operator(cairocffi.OPERATOR_SOURCE)
             ctx.mask(cairocffi.SurfacePattern(icon))
             ctx.fill()
 
         else:
-            ctx.set_source_surface(icon, x/scale, y/scale)
+            ctx.set_source_surface(icon, x / scale, y / scale)
             ctx.paint()
 
         ctx.restore()

@@ -27,6 +27,7 @@ import pytest
 from pytest_lazyfixture import lazy_fixture
 
 import qtile_extras.widget.currentlayout
+from test.helpers import BareConfig
 
 BAR_SIZE = 50
 PADDING = 3
@@ -65,15 +66,8 @@ def currentlayout_manager(request, layout_list, manager_nospawn):
         **{"use_mask": True, **getattr(request, "param", dict())}
     )
 
-    class CurrentLayoutConfig(libqtile.confreader.Config):
-        auto_fullscreen = True
-        keys = []
-        mouse = []
-        groups = [
-            libqtile.config.Group("a"),
-        ]
+    class CurrentLayoutConfig(BareConfig):
         layouts = layout_list
-        floating_layout = libqtile.resources.default_config.floating_layout
         screens = [
             libqtile.config.Screen(
                 top=libqtile.bar.Bar(

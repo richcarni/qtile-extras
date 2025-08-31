@@ -17,23 +17,39 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from functools import partial
+
 import pytest
 
-from qtile_extras.widget.currentlayout import CurrentLayoutIcon
+from qtile_extras.widget.snake import Snake
+from test.helpers import Retry
 from test.widget.docs_screenshots.conftest import widget_config
 
 
 @pytest.fixture
 def widget():
-    yield CurrentLayoutIcon
+    yield partial(Snake, length=200, interval=0.001)
 
 
 @widget_config(
-    [
-        {},
-        {"use_mask": True, "foreground": "0ff"},
-        {"use_mask": True, "foreground": ["f0f", "00f", "0ff"]},
-    ]
+    [{}, {"snake_colour": "f0f", "fruit_colour": ["0ff"], "size": 4}, {"autostart": False}]
 )
-def ss_currentlayouticon(screenshot_manager):
+def ss_snake(screenshot_manager):
+    snake = screenshot_manager.c.widget["snake"]
+    _, autostart = snake.eval("self.autostart")
+
+    def snake_length():
+        _, val = snake.eval("len(self.snake)")
+        return int(val)
+
+    @Retry(ignore_exceptions=(AssertionError,), tmax=30)
+    def wait_for_snake():
+        if autostart == "False":
+            assert True
+            return
+
+        assert snake_length() > 25
+
+    wait_for_snake()
+
     screenshot_manager.take_screenshot()

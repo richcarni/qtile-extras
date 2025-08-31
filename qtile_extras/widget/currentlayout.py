@@ -19,22 +19,21 @@
 # SOFTWARE.
 import cairocffi
 from libqtile.log_utils import logger
-from libqtile.widget import CurrentLayoutIcon as LayoutIcon
+from libqtile.widget import CurrentLayout as _CurrentLayout
 from libqtile.widget import base
 
 from qtile_extras.images import ImgMask
 
 
-class CurrentLayoutIcon(LayoutIcon):
+class CurrentLayout(_CurrentLayout):
     """
-    A modified version of Qtile's ``CurrentLayoutIcon``.
+    A modified version of Qtile's ``CurrentLayout``.
 
     The default version behaves the same as the main qtile version of the widget.
     However, if you set ``use_mask`` to ``True`` then you can set the colour of
     the icon via the ``foreground`` parameter.
     """
 
-    orientations = base.ORIENTATION_HORIZONTAL
     defaults = [
         (
             "use_mask",
@@ -44,8 +43,8 @@ class CurrentLayoutIcon(LayoutIcon):
     ]
 
     def __init__(self, **config):
-        LayoutIcon.__init__(self, **config)
-        self.add_defaults(CurrentLayoutIcon.defaults)
+        _CurrentLayout.__init__(self, **config)
+        self.add_defaults(CurrentLayout.defaults)
 
         # The original widget calculates a new scale value. We don't want to use that with the ImgMask.
         if self.use_mask:
@@ -56,7 +55,7 @@ class CurrentLayoutIcon(LayoutIcon):
         Loads layout icons.
         """
         if not self.use_mask:
-            LayoutIcon._setup_images(self)
+            _CurrentLayout._setup_images(self)
             return
 
         for names in self._get_layout_names():
@@ -91,21 +90,90 @@ class CurrentLayoutIcon(LayoutIcon):
             size = int((self.bar.height - 1) * self.scale)
             img.resize(size)
 
-            if img.width > self.length:
-                self.length = int(img.width) + self.actual_padding * 2
+            if img.width > self.img_length:
+                self.img_length = int(img.width)
 
             self.surfaces[layout_name] = img
 
         self.icons_loaded = True
 
-    def draw(self):
-        if not self.icons_loaded or not self.use_mask or self.current_layout not in self.surfaces:
-            LayoutIcon.draw(self)
+    def draw_icon(self):
+        if not self.icons_loaded:
+            return
+        try:
+            surface = self.surfaces[self.current_layout]
+        except KeyError:
+            logger.error("No icon for layout %s", self.current_layout)
             return
 
-        img = self.surfaces[self.current_layout]
-
         self.drawer.clear(self.background or self.bar.background)
-        offsety = (self.bar.height - img.height) // 2
-        img.draw(colour=self.foreground, x=self.actual_padding, y=offsety)
-        self.drawer.draw(offsetx=self.offset, offsety=self.offsety, width=self.length)
+        self.drawer.ctx.save()
+        self.rotate_drawer()
+
+        translatex, translatey = self.width, self.height
+
+        if self.mode == "both":
+            if self.bar.horizontal:
+                height = self.bar.height
+                if self.icon_first:
+                    # padding - icon - padding - text - padding
+                    x = self.actual_padding + self.img_length + self.actual_padding
+                    translatex -= base._TextBox.calculate_length(self) - self.actual_padding
+                else:
+                    # padding - text - padding - icon - padding
+                    x = self.actual_padding
+                    translatex += base._TextBox.calculate_length(self) - self.actual_padding
+            elif self.rotate:
+                height = self.bar.width
+                if self.icon_first:
+                    # padding - icon - padding - text - padding
+                    x = self.actual_padding + self.img_length + self.actual_padding
+                    translatey -= base._TextBox.calculate_length(self) - self.actual_padding
+                else:
+                    # padding - text - padding - icon - padding
+                    x = self.actual_padding
+                    translatey += base._TextBox.calculate_length(self) - self.actual_padding
+            else:
+                x = 0
+                if self.icon_first:
+                    # padding - icon - padding - text - padding
+                    height = self.actual_padding + self.img_length + self.actual_padding
+                    translatey -= base._TextBox.calculate_length(self) - self.actual_padding
+                else:
+                    # padding - text - padding - icon - padding
+                    height = self.actual_padding
+                    translatey += base._TextBox.calculate_length(self) - self.actual_padding
+                # neutralize all math in the layout.draw() below
+                # to simulate starting height from zero
+                height = (height * 2) + self.layout.height - 2
+
+            self.layout.draw(x, int(height / 2 - self.layout.height / 2) + 1)
+
+        if not self.bar.horizontal and self.rotate:
+            translatex, translatey = translatey, translatex
+
+        self.drawer.ctx.translate(
+            (translatex - surface.width) / 2,
+            (translatey - surface.height) / 2,
+        )
+        if self.use_mask:
+            surface.draw(colour=self.foreground)
+        else:
+            self.drawer.ctx.set_source(surface.pattern)
+            self.drawer.ctx.paint()
+        self.drawer.ctx.restore()
+        self.draw_at_default_position()
+
+
+class CurrentLayoutIcon(CurrentLayout):
+    """
+    Helper class to avoid breakages in users' config.
+
+    In qtile, the ``CurrentLayoutIcon`` widget was removed and combined with ``CurrentLayout``.
+
+    This class just passes the necessary arguments to ``CurrentLayout`` to result in the widget
+    displaying an icon.
+    """
+
+    def __init__(self, *args, **config):
+        CurrentLayout.__init__(self, *args, mode="icon", **config)

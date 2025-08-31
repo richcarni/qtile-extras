@@ -1,4 +1,4 @@
-# Copyright (c) 2025 elParaguayo
+# Copyright (c) 2024 elParaguayo
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,21 +19,29 @@
 # SOFTWARE.
 import pytest
 
-from qtile_extras.widget.currentlayout import CurrentLayoutIcon
+from qtile_extras.widget.currentlayout import CurrentLayout
 from test.widget.docs_screenshots.conftest import widget_config
 
 
 @pytest.fixture
 def widget():
-    yield CurrentLayoutIcon
+    yield CurrentLayout
 
 
 @widget_config(
     [
         {},
-        {"use_mask": True, "foreground": "0ff"},
-        {"use_mask": True, "foreground": ["f0f", "00f", "0ff"]},
+        {"mode": "icon"},
+        {"use_mask": True, "mode": "icon", "foreground": "0ff"},
+        {"use_mask": True, "icon_first": True, "mode": "both", "foreground": "0ff"},
+        {
+            "use_mask": True,
+            "icon_first": False,
+            "mode": "both",
+            "foreground": ["f0f", "00f", "0ff"],
+        },
+        {"use_mask": False, "icon_first": True, "mode": "both", "foreground": "f0f"},
     ]
 )
-def ss_currentlayouticon(screenshot_manager):
+def ss_currentlayout(screenshot_manager):
     screenshot_manager.take_screenshot()

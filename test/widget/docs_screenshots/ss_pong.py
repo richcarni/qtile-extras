@@ -17,23 +17,40 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from functools import partial
+
 import pytest
 
-from qtile_extras.widget.currentlayout import CurrentLayoutIcon
-from test.widget.docs_screenshots.conftest import widget_config
+from qtile_extras.widget.pong import Pong as _Pong
+from test.helpers import Retry
+
+
+class Pong(_Pong):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.step_count = 0
+
+    def ball_step(self):
+        super().ball_step()
+        self.step_count += 1
 
 
 @pytest.fixture
 def widget():
-    yield CurrentLayoutIcon
+    yield partial(Pong, length=200, ball_speed=100, paddle_speed=100, paddle_react_distance=100)
 
 
-@widget_config(
-    [
-        {},
-        {"use_mask": True, "foreground": "0ff"},
-        {"use_mask": True, "foreground": ["f0f", "00f", "0ff"]},
-    ]
-)
-def ss_currentlayouticon(screenshot_manager):
+def ss_pong(screenshot_manager):
+    pong = screenshot_manager.c.widget["pong"]
+
+    def step_count():
+        _, val = pong.eval("self.step_count")
+        return int(val)
+
+    @Retry(ignore_exceptions=(AssertionError,), tmax=30)
+    def wait_for_move():
+        assert step_count() > 25
+
+    wait_for_move()
+
     screenshot_manager.take_screenshot()

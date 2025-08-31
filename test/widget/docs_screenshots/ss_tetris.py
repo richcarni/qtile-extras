@@ -17,23 +17,47 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from functools import partial
+
 import pytest
 
-from qtile_extras.widget.currentlayout import CurrentLayoutIcon
+from qtile_extras.widget.tetris import Tetris as _Tetris
+from test.helpers import Retry
 from test.widget.docs_screenshots.conftest import widget_config
+
+
+class Tetris(_Tetris):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._place_count = 0
+
+    def place(self, *args):
+        super().place(*args)
+        self._place_count += 1
 
 
 @pytest.fixture
 def widget():
-    yield CurrentLayoutIcon
+    yield partial(Tetris, length=200, speed=1000)
 
 
-@widget_config(
-    [
-        {},
-        {"use_mask": True, "foreground": "0ff"},
-        {"use_mask": True, "foreground": ["f0f", "00f", "0ff"]},
-    ]
-)
-def ss_currentlayouticon(screenshot_manager):
+@widget_config([{}, {"blockify": True}, {"cell_size": 3}])
+def ss_tetris(screenshot_manager):
+    tetris = screenshot_manager.c.widget["tetris"]
+    _, autostart = tetris.eval("self.autostart")
+
+    def blocks_placed():
+        _, val = tetris.eval("self._place_count")
+        return int(val)
+
+    @Retry(ignore_exceptions=(AssertionError,), tmax=30)
+    def wait_for_blocks(count):
+        if autostart == "False":
+            assert True
+            return
+
+        assert blocks_placed() >= count
+
+    wait_for_blocks(10)
+
     screenshot_manager.take_screenshot()

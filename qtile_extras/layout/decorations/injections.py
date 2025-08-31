@@ -106,6 +106,7 @@ def new_place(
     above=False,
     margin=None,
     respect_hints=False,
+    scale=None,
 ):
     logger.debug("qtile_extras: Running injected window place method.")
     if isinstance(borderwidth, ConditionalBorderWidth):
@@ -131,4 +132,5 @@ def new_place(
         above=above,
         margin=margin,
         respect_hints=respect_hints,
+        scale=scale,
     )

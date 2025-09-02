@@ -1,4 +1,6 @@
-# elParaguayo's Qtile Extras
+⚠️ This fork supports the proof-of-concept implementation of HiDPI support for internal windows, from [this fork](https://github.com/richcarni/qtile)
+
+Support is incomplete. Primarily StatusNotifier is supported
 
 ![CI Action](https://github.com/elParaguayo/qtile-extras/workflows/ci/badge.svg?branch=main)
 [![Documentation Status](https://readthedocs.org/projects/qtile-extras/badge/?version=latest)](https://qtile-extras.readthedocs.io/en/latest/?badge=latest)

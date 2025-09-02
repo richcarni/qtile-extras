@@ -2,6 +2,8 @@
 
 Support is incomplete. Primarily StatusNotifier is supported
 
+---
+
 ![CI Action](https://github.com/elParaguayo/qtile-extras/workflows/ci/badge.svg?branch=main)
 [![Documentation Status](https://readthedocs.org/projects/qtile-extras/badge/?version=latest)](https://qtile-extras.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/elParaguayo/qtile-extras/badge.svg?branch=main)](https://coveralls.io/github/elParaguayo/qtile-extras?branch=main)
